@@ -16,11 +16,11 @@ A collection of all codes in conjunction with the project called RheoMorph at th
 
 ### 🗂️ Morphology
 
-#### 🔬 ** MicroBioVision **
+#### 🔬 MicroBioVision
 
 Image Analysis for microscopic images of pellets. Calculates a plethora of geometric and size related features 
 
-#### 📚 ** MorphCluster **
+#### 📚 MorphCluster 
 
 Clustering of pellet geometries
 
