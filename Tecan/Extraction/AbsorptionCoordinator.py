@@ -6,7 +6,7 @@ import sys
 import traceback
 
 class AbsorptionCoordinator:
-    def __init__(self, dataframe, sample_methods, sample_names, sample_positions, Version, sample_dilutions):
+    def __init__(self, dataframe, sample_methods, sample_names, sample_positions, Version, sample_dilutions, return_individual):
         self.Version = Version
         self.df = dataframe
         self.sample_dilutions = sample_dilutions
@@ -14,6 +14,7 @@ class AbsorptionCoordinator:
         self.sample_names = sample_names
         self.sample_positions = sample_positions
         self.all_sample_data = {}
+        self.return_individual = return_individual
 
     def _Version_Coordination(self):
         try:
@@ -98,10 +99,20 @@ class AbsorptionCoordinator:
         for name in unique_names:
             if name in blue_data:
                 raw_values = blue_data[name]
-                transformerBlue = TransformationBlue(raw_values)
-                avg, std = transformerBlue.transformation()
-                full_data[name]["blue_avg"] = avg
-                full_data[name]["blue_std"] = std
+
+                if self.return_individual:
+                    for idx, val in enumerate(raw_values, start=1):
+                        new_name = f"{name}_{idx}"
+                        if new_name not in full_data:
+                            full_data[new_name] = {"blue_avg": None, "blue_std": None, "red_avg": None, "red_std": None}
+                        full_data[new_name]["blue_avg"] = val
+                        full_data[new_name]["blue_std"] = 0
+                else:
+                    transformerBlue = TransformationBlue(raw_values)
+                    avg, std = transformerBlue.transformation()
+                    full_data[name]["blue_avg"] = avg
+                    full_data[name]["blue_std"] = std
+
 
         # --- RED ---
         red_data = {}
@@ -126,10 +137,19 @@ class AbsorptionCoordinator:
         for name in unique_names:
             if name in red_data:
                 raw_values = red_data[name]
-                transformerRed = TransformationRed(raw_values)
-                avg, std = transformerRed.transformation()
-                full_data[name]["red_avg"] = avg
-                full_data[name]["red_std"] = std
+
+                if self.return_individual:
+                    for idx, val in enumerate(raw_values, start=1):
+                        new_name = f"{name}_{idx}"
+                        if new_name not in full_data:
+                            full_data[new_name] = {"blue_avg": None, "blue_std": None, "red_avg": None, "red_std": None}
+                        full_data[new_name]["red_avg"] = val
+                        full_data[new_name]["red_std"] = 0
+                else:
+                    transformerRed = TransformationRed(raw_values)
+                    avg, std = transformerRed.transformation()
+                    full_data[name]["red_avg"] = avg
+                    full_data[name]["red_std"] = std
 
         return full_data
 
@@ -174,10 +194,18 @@ class AbsorptionCoordinator:
 
             # ⬇️ Apply transformation to blue data
             for name in unique_names:
-                if name in blue_data:
-                    avg, std = compute_averages_and_deviations(blue_data[name])
-                    full_data[name]["blue_avg"] = avg
-                    full_data[name]["blue_std"] = std
+                if name in red_data:
+                    if self.return_individual:
+                        for idx, val in enumerate(blue_data[name], start=1):
+                            new_name = f"{name}_{idx}"
+                            if new_name not in full_data:
+                                full_data[new_name] = {"blue_avg": None, "blue_std": None, "red_avg": None, "red_std": None}
+                            full_data[new_name]["blue_avg"] = val
+                            full_data[new_name]["blue_std"] = 0
+                    else:
+                        avg, std = compute_averages_and_deviations(blue_data[name])
+                        full_data[name]["blue_avg"] = avg
+                        full_data[name]["blue_std"] = std
 
             # --- RED ---
             red_dilution_map = self.get_dilution_map("r")
@@ -201,8 +229,16 @@ class AbsorptionCoordinator:
 
             for name in unique_names:
                 if name in red_data:
-                    avg, std = compute_averages_and_deviations(red_data[name])
-                    full_data[name]["red_avg"] = avg
-                    full_data[name]["red_std"] = std
+                    if self.return_individual:
+                        for idx, val in enumerate(blue_data[name], start=1):
+                            new_name = f"{name}_{idx}"
+                            if new_name not in full_data:
+                                full_data[new_name] = {"red_avg": None, "red_std": None, "blue_avg": None, "blue_std": None}
+                            full_data[new_name]["red_avg"] = val
+                            full_data[new_name]["red_std"] = 0
+                    else:
+                        avg, std = compute_averages_and_deviations(blue_data[name])
+                        full_data[name]["red_avg"] = avg
+                        full_data[name]["red_std"] = std
 
             return full_data

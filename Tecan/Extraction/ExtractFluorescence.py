@@ -3,7 +3,7 @@ import numpy as np
 from collections import defaultdict
 
 class FluorescenceProcessor:
-    def __init__(self, dataframe, sample_methods, sample_names, sample_dilutions):
+    def __init__(self, dataframe, sample_methods, sample_names, sample_dilutions, return_individual):
         self.sample_methods = sample_methods
         self.sample_names = sample_names
         self.sample_dilutions = sample_dilutions
@@ -11,6 +11,7 @@ class FluorescenceProcessor:
         self.values_set_1 = []
         self.values_set_2 = []
         self.result_by_sample = defaultdict(list)
+        self.return_individual = return_individual
 
     def _extract_setup(self):
         self.find_544_values()
@@ -67,19 +68,28 @@ class FluorescenceProcessor:
             values = self.result_by_sample.get(name, [])
             clean_vals = [v for v in values if v is not None]
 
-            if clean_vals:
-                avg = np.mean(clean_vals)
-                std = np.std(clean_vals, ddof=1) if len(clean_vals) > 1 else 0
+            if self.return_individual:
+                for idx, val in enumerate(clean_vals, start=1):
+                    new_name = f"{name}_{idx}"
+                    full_data[new_name] = {
+                        "fluorescence_avg": val,
+                        "fluorescence_std": 0
+                    }
             else:
-                avg = None
-                std = None
+                if clean_vals:
+                    avg = np.mean(clean_vals)
+                    std = np.std(clean_vals, ddof=1) if len(clean_vals) > 1 else 0
+                else:
+                    avg = None
+                    std = None
 
-            full_data[name] = {
-                "fluorescence_avg": avg,
-                "fluorescence_std": std
-            }
+                full_data[name] = {
+                    "fluorescence_avg": avg,
+                    "fluorescence_std": std
+                }
 
         return full_data
+
 
     @staticmethod
     def _safe_float(value):

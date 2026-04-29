@@ -11,41 +11,43 @@ from Extraction.AbsorptionCoordinator import AbsorptionCoordinator
 
 class Coordinator:
 
-    def __init__(self, file_path, Version):
+    def __init__(self, file_path, Version, return_individual):
         self.Version = Version
         self.file_path = file_path
         self.result = {}
         self.metadata = []
+        self.return_individual = return_individual
 
 
     def get_result(self):
         df = self._read_file() # 1: Read the file
         sample_names, sample_methods, sample_positions, sample_dilutions = self._read_names(df) # 2: Read the names, methods, and positions from the file
         write = WriteResult(self.file_path)
-        self.result = write.final_result_dict(sample_names)  # 3: Create a result dict with the sample names as keys, here the values are all none and will be updated if evaluated
+        #self.result = write.final_result_dict(sample_names)  # 3: Create a result dict with the sample names as keys, here the values are all none and will be updated if evaluated
+        self.result = {}
         self.coordinate_extraction(sample_names, sample_methods, sample_positions, sample_dilutions, df)
         return self.result
 
     def coordinate_extraction(self, sample_names, sample_methods, sample_positions, sample_dilutions, df):
         
         if "f" in sample_methods:
-            fprocessor = FluorescenceProcessor(df, sample_methods, sample_names, sample_dilutions)
+            fprocessor = FluorescenceProcessor(df, sample_methods, sample_names, sample_dilutions, return_individual=self.return_individual)
             values_fluorescence = fprocessor._extract_setup()
-            for sample in self.result:
-                try:
-                    self.result[sample].update(values_fluorescence[sample])  # update the result dict with the fluorescence values
-                except:
-                    print(f"⚠️ Sample '{sample}' not found in the fluorescence data. Skipping merge.")
+            for sample, values in values_fluorescence.items():
+                if sample not in self.result:
+                    self.result[sample] = {}
+                self.result[sample].update(values)
+
                     
 
-        if "b" or "r" in sample_methods:
-            Extract = AbsorptionCoordinator(df, sample_methods, sample_names, sample_positions, self.Version, sample_dilutions)
+        if "b" in sample_methods or "r" in sample_methods:
+            Extract = AbsorptionCoordinator(df, sample_methods, sample_names, sample_positions, self.Version, sample_dilutions, return_individual=self.return_individual)
             values_absorption = Extract._Version_Coordination()
-            for sample in self.result:
-                try:
-                    self.result[sample].update(values_absorption[sample]) # update the result dict with the absorption values
-                except:
-                    print(f"⚠️ Sample '{sample}' not found in the absorption data. Skipping merge.")
+            for sample, values in values_absorption.items():
+                if sample not in self.result:
+                    self.result[sample] = {}
+                self.result[sample].update(values)
+
 
 
 

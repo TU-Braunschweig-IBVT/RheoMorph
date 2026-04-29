@@ -40,15 +40,20 @@ Raw: Raw data. Takes the average and standard deviation of the samples, consider
 """
 
 
+# Whether to return individual replicate values in the output file or just the average and standard deviation.
+return_individual=True
+
+
 
 
 class setup:
     # This is needed to start the script and initialises the lists in which all the data is collected
-    def __init__(self, input_folder, output_file, Version):
+    def __init__(self, input_folder, output_file, Version, return_individual):
         self.input_folder = input_folder
         self.output_path = output_file
         self.Version = Version
         self.all_results = []
+        self.return_individual = return_individual
     
     # This function will try to run the Coordinator on all files in the input folder
     def run(self):
@@ -57,7 +62,7 @@ class setup:
             full_path = os.path.join(self.input_folder, file_name)
             print(f"\n📂 Processing: {file_name}")
             try:
-                processor = Coordinator(full_path, self.Version)  # Create an instance of the Coordinator class
+                processor = Coordinator(full_path, self.Version, return_individual=self.return_individual)
                 self.all_results = processor.get_result()
                 #print(f"✅ Processed {file_name} successfully: {self.all_results} samples extracted.")
             except Exception as e:
@@ -99,6 +104,6 @@ class setup:
 
 # This is the main entry point of the script
 if __name__ == "__main__":
-    app = setup(input_folder, output_file, Version) # Calling the setup class (the part above)
+    app = setup(input_folder, output_file, Version, return_individual) # Calling the setup class (the part above)
     app.run() # Running the setup class
 

@@ -35,6 +35,14 @@ A modular Python tool to read, transform, and aggregate data from Spark Multimod
 - Minor bug fixes
 - Results are now sorted before saved in the results file
 
+### Version 0.3
+
+- Added Function "return_individual"
+  - if set to "TRUE" there will be given back no average values, but each individual data point transformed by it self
+  - This ensures to be able to look at what datapoint might causes issue
+  - be aware that the Tecan itself measures twice, thus if you have four replicates you will end up with eight values
+  - to go back to the old version, just set to "FALSE"
+
 ---
 
 ## 📖 Manual
@@ -173,6 +181,14 @@ This method is used to analyse the data for the extraction of undecylpriogisin. 
     This Version of the methods will search for "f", "b" and "r". This code does also work if one of those is missing. Regarding "b" and "r" the values are in this Version are not transformed into the resulting concentration of the pigments. Thus they are kept raw and the average and the standard deviation is saved.
 
 ---
+
+#### return_individual
+This additional function allows to look at individual datapoints
+
+1. "TRUE"
+    The code will give back each individual data point. If they are transformed depends on the method-Version discussed before. This allows to find misleading data points.
+2. "FALSE"
+    Orignal modus. Will lead to the average of datapoints mith the same name and method
 
 ## 🧭 Planned Features
 
