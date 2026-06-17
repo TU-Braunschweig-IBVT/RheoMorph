@@ -152,24 +152,31 @@ class PSDClusterProcessor:
 
             # Only process folders that contain combined_data.csv
             if "combined_data.csv" not in files:
+                print('not found: combined_data.csv')
                 continue
 
             # Remembers the folder path that is checked out at the moment
             file_path = root_path / "combined_data.csv"
-            print(f"[DBG] Found data file: {file_path}")
 
             # Clean up old results
             self.clean_folder(root_path)
 
             # --- Load data ---
             df = pd.read_csv(file_path)
+            print('df', df.head(5))
             df.columns = df.columns.str.strip()  # remove trailing spaces (The Volume got a blank space in the end)
-
+            
+            
             # Check required columns -> Volume and Diameter
-            if "Diameter [mym]" not in df.columns or "Volume [mym^3]" not in df.columns:
+            if "(eq) Diameter [mym]" not in df.columns or "(eq) Volume [mym^3]" not in df.columns:
                 print(f"[WARN] Skipping {file_path.name} — missing required columns.")
                 continue
-
+            
+            df = df.rename(columns={
+                "(eq) Diameter [mym]": "Diameter [mym]",
+                "(eq) Volume [mym^3]": "Volume [mym^3]"
+                })
+            
             # Sort and compute volume fraction
             df = df.sort_values(by="Diameter [mym]").reset_index(drop=True)
             total_volume = df["Volume [mym^3]"].sum()

@@ -63,7 +63,7 @@ class MatrixEvaluator:
             df["cluster"] = df[cluster_col].astype(int)
 
             # --- Check required columns ---
-            required = ["diameter [mym]", "volume fraction", "irregularity [-]", "diameter ratio [-]"]
+            required = ["diameter [mym]", "volume fraction", "circularity [-]", "compactness [-]"]
             missing = [col for col in required if col not in df.columns]
             if missing:
                 print(f"[ERR] Missing required columns {missing} in {file_path.name}. Skipping this file.")
@@ -74,10 +74,10 @@ class MatrixEvaluator:
                 Mean_Diameter=("diameter [mym]", "mean"),
                 Std_Diameter=("diameter [mym]", "std"),
                 Total_VolumeFraction=("volume fraction", "sum"),
-                Mean_Circularity=("irregularity [-]", "mean"),
-                Std_Circularity=("irregularity [-]", "std"),
-                Mean_Compactness=("diameter ratio [-]", "mean"),
-                Std_Compactness=("diameter ratio [-]", "std"),
+                Mean_Circularity=("circularity [-]", "mean"),
+                Std_Circularity=("circularity [-]", "std"),
+                Mean_Compactness=("compactness [-]", "mean"),
+                Std_Compactness=("compactness [-]", "std"),
                 Particle_Count=("diameter [mym]", "count")
             ).reset_index()
 

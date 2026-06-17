@@ -105,7 +105,10 @@ class AbsorptionCoordinator:
                         new_name = f"{name}_{idx}"
                         if new_name not in full_data:
                             full_data[new_name] = {"blue_avg": None, "blue_std": None, "red_avg": None, "red_std": None}
-                        full_data[new_name]["blue_avg"] = val
+                        val_ls=[val]
+                        calculatorBlue=TransformationBlue(val_ls)
+                        val_calc_blue=calculatorBlue.calculation()
+                        full_data[new_name]["blue_avg"] = val_calc_blue[0]
                         full_data[new_name]["blue_std"] = 0
                 else:
                     transformerBlue = TransformationBlue(raw_values)
@@ -143,7 +146,10 @@ class AbsorptionCoordinator:
                         new_name = f"{name}_{idx}"
                         if new_name not in full_data:
                             full_data[new_name] = {"blue_avg": None, "blue_std": None, "red_avg": None, "red_std": None}
-                        full_data[new_name]["red_avg"] = val
+                        val_ls=[val]
+                        calculatorRed=TransformationRed(val_ls)
+                        val_calc_red=calculatorRed.calculation()
+                        full_data[new_name]["red_avg"] = val_calc_red[0]
                         full_data[new_name]["red_std"] = 0
                 else:
                     transformerRed = TransformationRed(raw_values)
