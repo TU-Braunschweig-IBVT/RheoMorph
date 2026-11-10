@@ -75,7 +75,8 @@ class ResultWriter:
             merged[sample] = vals
 
         sorted_samples = sorted(merged.keys(), key=self._sort_key)
-
+        self.R2_MIN = 0.75 # threshold for including a sample in group statistics
+        
         # ---------- robust numeric conversion ----------
         def to_float_safe(v):
             """Convert many representations to float or return None."""
@@ -107,13 +108,19 @@ class ResultWriter:
         for sample in sorted_samples:
             vals = merged[sample]
             nums = self._extract_number_tuple(sample)
-            if nums is None:
-                group_name = sample
-            else:
+    
+            if 'DOE' in sample and nums is None:
                 if len(nums) >= 2:
                     group_name = f"DOE {nums[0]}.{nums[1]}"
                 else:
                     group_name = f"DOE {nums[0]}"
+            
+            elif 'BO' in sample and nums is not None:
+                split_name=sample.split('.')
+                group_name=f"{split_name[0]}.{split_name[1]}"
+                
+            else:
+                group_name = sample
 
             groups.setdefault(group_name, {"K": [], "n": [], "R²": []})
             groups_samples.setdefault(group_name, []).append((sample, vals))
@@ -122,12 +129,18 @@ class ResultWriter:
             n_val = to_float_safe(vals.get("n"))
             r2_val = to_float_safe(vals.get("R²"))
 
+           
+            # Exclude poor fits from the group statistics
+            if r2_val is None or r2_val < self.R2_MIN:
+                print(f"[INFO] {sample} excluded from mean (R²={r2_val})")
+                continue
+
             if k_val is not None:
                 groups[group_name]["K"].append(k_val)
             if n_val is not None:
                 groups[group_name]["n"].append(n_val)
-            if r2_val is not None:
-                groups[group_name]["R²"].append(r2_val)
+            groups[group_name]["R²"].append(r2_val)
+
 
         # --------------------- diagnostics / logging ---------------------
         for g, samples in groups_samples.items():
