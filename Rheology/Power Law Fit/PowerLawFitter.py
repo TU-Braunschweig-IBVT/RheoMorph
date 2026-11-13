@@ -33,6 +33,8 @@ class PowerLawFitter:
         gamma = np.array(gamma)
         tau = np.array(tau)
 
+        eta_all, gamma_all = eta.copy(), gamma.copy()
+
         # Keep only valid points
         mask = (tau > 5e-8) & (gamma >= 0.7) & np.isfinite(eta) & np.isfinite(gamma)
         eta = eta[mask]
@@ -66,18 +68,23 @@ class PowerLawFitter:
 
         # Plot
         pid = plot_id if plot_id else f"linearised_{np.random.randint(1e6)}"
-        self._plot_linearised_save(gamma, eta, K, n, r2, pid)
+        self._plot_linearised_save(gamma, eta, K, n, r2, pid, gamma_all, eta_all)
 
         return K, n, r2
 
-    def _plot_linearised_save(self, gamma, eta, K, n, r2, plot_id):
+    def _plot_linearised_save(self, gamma, eta, K, n, r2, plot_id,  gamma_all, eta_all):
     #def _plot_linearised_save(self, gamma_fit, eta_fit, gamma_excl, eta_excl, K, n, r2, plot_id): 
         current_dir = Path(__file__).parent
         outdir = current_dir / "Evaluate" / "Plots"
         os.makedirs(outdir, exist_ok=True)
 
         plt.figure(figsize=(6, 4))
-        plt.scatter(gamma, eta, color="black") #, label="Data"
+        # only positive, finite points can be shown on log axes
+        ok = np.isfinite(gamma_all) & np.isfinite(eta_all) & (gamma_all > 0) & (eta_all > 0)
+        plt.scatter(gamma_all[ok], eta_all[ok], color="gray", alpha=0.5,
+                    label="excluded / all data", zorder=1)
+
+        plt.scatter(gamma, eta, color="black", label="fitted data", zorder=2)
 
         gamma_fit = np.logspace(np.log10(min(gamma)), np.log10(max(gamma)), 200)
         eta_fit = self.power_law(gamma_fit, K, (n-1))
@@ -90,10 +97,13 @@ class PowerLawFitter:
         plt.ylabel("apparent viscosity $\mu_{\mathrm{app}}$ [Pa·s]")
         plt.xscale("log")
         plt.yscale("log")
-        xmin_decade = 10 ** np.floor(np.log10(min(gamma)))
-        xmax_decade = 10 ** np.ceil(np.log10(max(gamma)))
-        ymin_decade = 10 ** np.floor(np.log10(min(eta)))
-        ymax_decade = 10 ** np.ceil(np.log10(max(eta)))
+        g_plot = np.concatenate([gamma, gamma_all[ok]])
+        e_plot = np.concatenate([eta, eta_all[ok]])
+
+        xmin_decade = 10 ** np.floor(np.log10(g_plot.min()))
+        xmax_decade = 10 ** np.ceil(np.log10(g_plot.max()))
+        ymin_decade = 10 ** np.floor(np.log10(e_plot.min()))
+        ymax_decade = 10 ** np.ceil(np.log10(e_plot.max()))
         plt.xlim(xmin_decade, xmax_decade)
         plt.ylim(ymin_decade, ymax_decade)
 
