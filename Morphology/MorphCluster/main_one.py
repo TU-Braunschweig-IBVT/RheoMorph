@@ -1,5 +1,7 @@
 from pathlib import Path
 from One.FolderSearcher import FolderProcessor
+import tkinter as tk
+from tkinter import filedialog
 
 current_dir = Path(__file__).parent
 
@@ -15,7 +17,10 @@ class MainApp:
         processor.process()
 
 if __name__ == "__main__":
-    base_path = Path(__file__).parent / "Input"
-    output_path = Path(__file__).parent / "Output"
-
-    app = MainApp(base_path, output_path)
+    
+    #base_path = Path(__file__).parent / "Input"
+    #output_path = Path(__file__).parent / "Output"
+    base_path=filedialog.askdirectory(title="Select base folder that contains all subfolders to analyze.")
+    output_folder = Path(base_path) / "Clustering"
+    #output_folder.mkdir(exist_ok=True)
+    app = MainApp(base_path, output_folder)

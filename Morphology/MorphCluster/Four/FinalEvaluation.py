@@ -47,6 +47,8 @@ class MatrixEvaluator:
            # --- Load data ---
             df = pd.read_csv(file_path, skiprows=1)
             df.columns = df.columns.str.strip().str.lower()
+            # Accept "(eq) diameter [mym]" / "(eq) volume [mym^3]" as well as the plain names
+            df.columns = df.columns.str.replace(r"^\(eq\)\s*", "", regex=True)
 
             # --- Select correct cluster column ---
             cluster_col = f"cluster_{self.cluster_type.lower()}_k{self.cluster_count}"
@@ -63,23 +65,34 @@ class MatrixEvaluator:
             df["cluster"] = df[cluster_col].astype(int)
 
             # --- Check required columns ---
-            required = ["diameter [mym]", "volume fraction", "circularity [-]", "compactness [-]"]
+            required = ["diameter [mym]", "volume fraction"]
             missing = [col for col in required if col not in df.columns]
             if missing:
                 print(f"[ERR] Missing required columns {missing} in {file_path.name}. Skipping this file.")
                 continue
 
             # --- Group by cluster ---
-            grouped = df.groupby("cluster").agg(
-                Mean_Diameter=("diameter [mym]", "mean"),
-                Std_Diameter=("diameter [mym]", "std"),
-                Total_VolumeFraction=("volume fraction", "sum"),
-                Mean_Circularity=("circularity [-]", "mean"),
-                Std_Circularity=("circularity [-]", "std"),
-                Mean_Compactness=("compactness [-]", "mean"),
-                Std_Compactness=("compactness [-]", "std"),
-                Particle_Count=("diameter [mym]", "count")
-            ).reset_index()
+            aggs = {
+                "Mean_Diameter": ("diameter [mym]", "mean"),
+                "Std_Diameter": ("diameter [mym]", "std"),
+                "Total_VolumeFraction": ("volume fraction", "sum"),
+            }
+            # Optional shape parameters: ignored if not present
+            optional = {
+                "circularity [-]": ("Mean_Circularity", "Std_Circularity"),
+                "compactness [-]": ("Mean_Compactness", "Std_Compactness"),
+                "irregularity [-]": ("Mean_Irregularity", "Std_Irregularity"),
+                "diameter ratio [-]": ("Mean_DiameterRatio", "Std_DiameterRatio"),
+            }
+            for col, (mean_name, std_name) in optional.items():
+                if col in df.columns:
+                    aggs[mean_name] = (col, "mean")
+                    aggs[std_name] = (col, "std")
+                else:
+                    print(f"[INFO] '{col}' not found in {file_path.name}. Ignoring it.")
+            aggs["Particle_Count"] = ("diameter [mym]", "count")
+
+            grouped = df.groupby("cluster").agg(**aggs).reset_index()
 
 
             # --- Save output ---

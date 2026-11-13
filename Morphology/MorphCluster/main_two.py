@@ -1,5 +1,7 @@
 from pathlib import Path
 from Two.ClusterProcessor import PSDClusterProcessor
+import tkinter as tk
+from tkinter import filedialog
 
 class MainApp:
     def __init__(self, base_path):
@@ -11,6 +13,6 @@ class MainApp:
         processor.process()
 
 if __name__ == "__main__":
-    current_dir = Path(__file__).parent
-    base_path = current_dir / "Output"
+    base_path=filedialog.askdirectory(title="Select folder with subfolders that contain fused morphology data (Clustering folder).")
+
     app = MainApp(base_path)

@@ -21,6 +21,8 @@ class PSDPlotter:
 
         self.df = pd.read_csv(self.file_path, skiprows=skip)
         self.df.columns = self.df.columns.str.strip()
+        # Accept "(eq) Diameter [mym]" / "(eq) Volume [mym^3]" as well as the plain names
+        self.df.columns = self.df.columns.str.replace(r"^\(eq\)\s*", "", regex=True)
         print(f"[INFO] Loaded data from {self.file_path.name}")
 
     def plot_psd(self):

@@ -168,14 +168,18 @@ class PSDClusterProcessor:
             
             
             # Check required columns -> Volume and Diameter
-            if "(eq) Diameter [mym]" not in df.columns or "(eq) Volume [mym^3]" not in df.columns:
+            # Accept both "(eq) Diameter [mym]" and "Diameter [mym]" (same for Volume);
+            # the "(eq)" variant takes precedence if both exist.
+            missing = False
+            for plain in ("Diameter [mym]", "Volume [mym^3]"):
+                eq_name = f"(eq) {plain}"
+                if eq_name in df.columns:
+                    df = df.drop(columns=[plain], errors="ignore").rename(columns={eq_name: plain})
+                elif plain not in df.columns:
+                    missing = True
+            if missing:
                 print(f"[WARN] Skipping {file_path.name} — missing required columns.")
                 continue
-            
-            df = df.rename(columns={
-                "(eq) Diameter [mym]": "Diameter [mym]",
-                "(eq) Volume [mym^3]": "Volume [mym^3]"
-                })
             
             # Sort and compute volume fraction
             df = df.sort_values(by="Diameter [mym]").reset_index(drop=True)
